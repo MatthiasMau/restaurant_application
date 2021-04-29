@@ -1,0 +1,98 @@
+<?php 
+    session_start();
+    require_once('components/db_connect.php');
+    require_once('components/sanitizeData.php');
+    require_once('components/boot.php');
+    if (isset($_SESSON['user']) != ""){
+        header("Location: home.php");
+        exit;
+    }
+    if (isset($_SESSION['adm']) != ""){
+        header("Location: dashboard.php");
+    }
+    $error = false;
+    $email = $password = $emailError = $passError = '';
+
+    if (isset($_POST['btn-login'])){
+        //dataSanitize
+        $email = sanitizeData($_POST['email']);
+        $pass = sanitizeData($_POST['pass']);
+
+        //email verification 
+        if (empty($email)){
+            $error = true;
+            $emailError = "Please enter your email address";
+        } else if (!filter_var($email, FILTER_VALIDATE_EMAIL)){
+            $error = true;
+            $emailError = "Please enter VALID email";
+        }//password verification
+        if (empty($pass)){
+            $error = true;
+            $passError = "Please enter your password";
+        }
+        //if no error, continue with login
+        if(!$error){
+            $password = hash('sha256', $pass);
+            //so the query is partially hidden, for security
+            $sqlSelect = "SELECT id, first_name, password, status FROM user where email = ?";
+            //prep the sql query, necessary for the next step wehre we do param_bind
+            $stmt = $connect->prepare($sqlSelect);
+            //now bind param, to search DB for string w/ $email
+            $stmt->bind_param("s", $email);
+            //execute the query
+            $work = $stmt->execute();
+            //assign results to $result;
+            $result = $stmt->get_result();
+            //fetch returned array, assigning the fetching to $row and the fetched result to $result
+            $row = $result->fetch_assoc();
+            //count the num of returned rows
+            $count = $result->num_rows;
+            //if 1 row is found, and passwrd maatches
+            if ($count == 1 && $row['password'] == $password){
+            //Detect if admin
+            if ($row['status'] == 'adm'){
+                $_SESSION['adm'] = $row['id'];
+                //put admin in dashboard
+                header("Location: dashboard.php"); 
+            }else {
+                //if user, redirect to home.php
+                $_SESSION['user'] = $row['id'];
+                header("Location: home.php");
+            } 
+         } else {
+                $errMSG = "Incorrect Credentials, Try again";
+            }
+        }
+    }
+    $connect->close();
+?>
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+   <meta charset="UTF-8">
+    <meta name="viewport"   content="width=device-width, initial-scale=1.0">
+<title>Login & Registration System </title>
+<?php require_once  'components/boot.php'?>
+</head>
+<body>
+   <div class="container">
+       <form class="w-75"  method="POST" action= "<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" autocomplete="off" >
+           <h2>LogIn</h2>
+           <hr/>
+            <?php
+           if (isset($errMSG)) {
+               echo $errMSG;
+           }
+           ?>
+           <input type="email"  autocomplete="off" name= "email" class="form-control"  placeholder="Your Email" value="<?php echo $email; ?>"  maxlength ="40" />
+           <span class="text-danger" ><?php echo $emailError; ?></span>
+           <input  type="password" name= "pass"  class="form-control" placeholder="Your Password" maxlength="15"  />
+           <span class= "text-danger"><?php echo $passError; ?></span>
+           <hr/>
+           <button class="btn btn-block btn-primary"  type="submit" name ="btn-login">Sign In</button>
+           <hr/>
+           <a href="register.php"> Not registered yet? Click here</a>
+        </form>
+   </div>
+</body>
+</html>
