@@ -6,9 +6,9 @@
 
     $connect = new mysqli($localhost, $username, $password, $dbname);
 
-    if($connect->connect_error){
-        die("connection failed:" . $connect->connect_error);
-    } else {
-        echo "successfully connected";
-    }
+    // if($connect->connect_error){
+    //     die("connection failed:" . $connect->connect_error);
+    // } else {
+    //     echo "successfully connected";
+    // }
 ?>

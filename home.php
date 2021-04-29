@@ -2,15 +2,17 @@
     session_start();
     require_once('components/db_connect.php');
     require_once('components/boot.php');
-    // if (isset($_SESSION['adm'])){
-    //     header("Location: dashboard.php");
-    //     exit;
-    // }
-    // //if !admin and !user, then proceed to login page, because user is not logged in.
-    // if (!isset($_SESSION['adm']) && !isset($_SESSION['user'])){
-    //     header("Location: index.php");
-    //     exit;
-    // }
+    require_once('components/displayQueryFunc.php');
+
+    if (isset($_SESSION['adm'])){
+        header("Location: dashboard.php");
+        exit;
+    }
+    //if !admin and !user, then proceed to login page, because user is not logged in.
+    if (!isset($_SESSION['adm']) && !isset($_SESSION['user'])){
+        header("Location: index.php");
+        exit;
+    }
     //create the logged in users details, procedurally
     $res = mysqli_query($connect, "SELECT * FROM user where id =" . $_SESSION['user']);
     var_dump($res);
